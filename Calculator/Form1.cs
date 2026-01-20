@@ -402,6 +402,7 @@ namespace Simple_Windows_Calculator
                 default:
                     break;
             }
+            Thread.Sleep(50);
         }
 
         private void SimpleCalculator_KeyDown(object sender, KeyEventArgs e)
@@ -437,12 +438,18 @@ namespace Simple_Windows_Calculator
         // bị nuốt bởi Control trên màn hình trước khi Forms bắt được phím
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
+            /*
             if (keyData == Keys.Enter && this.ActiveControl != null)
             {
                 if (this.ActiveControl.Handle != this.btnEqual.Handle)
                 {
                     this.btnEqual.Select();
                 }
+            }
+            */
+            if (keyData == Keys.Enter)
+            {
+                this.btnEqual.PerformClick();
             }
             return base.ProcessCmdKey(ref msg, keyData);
         }
