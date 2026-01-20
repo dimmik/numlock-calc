@@ -6,13 +6,55 @@ namespace Simple_Windows_Calculator
     public partial class SimpleCalculator : Form
     {
         private NotifyIcon notifyIcon;
+        private KeyboardHook keyboardHook;
+
+        bool NumLockIsSetToOn = false;
+
+        [DllImport("user32.dll")]
+        private static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, int dwExtraInfo);
+
+        // P/Invoke for NumLock control without keyboard events
+        [DllImport("user32.dll")]
+        private static extern bool GetKeyboardState(byte[] lpKeyState);
+
+        [DllImport("user32.dll")]
+        private static extern bool SetKeyboardState(byte[] lpKeyState);
 
         public SimpleCalculator()
         {
             InitializeComponent();
             SetupTrayIcon();
+            SetupKeyboardHook();
         }
 
+        // P/Invoke for NumLock control
+        private const byte VK_NUMLOCK = 0x90;
+        private const uint KEYEVENTF_EXTENDEDKEY = 0x1;
+        private const uint KEYEVENTF_KEYUP = 0x2;
+
+
+        private void SetupKeyboardHook()
+        {
+            keyboardHook = new KeyboardHook();
+            keyboardHook.KeyPressed += KeyboardHook_KeyPressed;
+            keyboardHook.Hook();
+        }
+
+        private void KeyboardHook_KeyPressed(object sender, KeyPressedEventArgs e)
+        {
+            if (e.Key == Keys.NumLock)
+            {
+                if (WindowState == FormWindowState.Minimized || !Visible)
+                {
+                    RestoreFromTray();
+                }
+                else
+                {
+                    MinimizeToTray();
+                }
+                // Force NumLock back on after toggle 
+            }
+        }
 
         private void SetupTrayIcon()
         {
@@ -37,12 +79,17 @@ namespace Simple_Windows_Calculator
             this.Resize += Form1_Resize;
         }
 
+        private void MinimizeToTray()
+        {
+            Hide();
+            notifyIcon.Visible = true;
+        }
+
         private void Form1_Resize(object sender, EventArgs e)
         {
             if (WindowState == FormWindowState.Minimized)
             {
-                Hide();
-                notifyIcon.Visible = true;
+                MinimizeToTray();
             }
         }
 
