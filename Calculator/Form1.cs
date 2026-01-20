@@ -5,10 +5,66 @@ namespace Simple_Windows_Calculator
 {
     public partial class SimpleCalculator : Form
     {
+        private NotifyIcon notifyIcon;
+
         public SimpleCalculator()
         {
             InitializeComponent();
+            SetupTrayIcon();
         }
+
+
+        private void SetupTrayIcon()
+        {
+            notifyIcon = new NotifyIcon();
+
+            // Set the icon - you can use the application icon or load from file
+            notifyIcon.Icon = SystemIcons.Application; // or: new Icon("path/to/icon.ico")
+
+            notifyIcon.Text = "Numlock Calc";
+            notifyIcon.Visible = true;
+
+            // Double-click to restore
+            notifyIcon.DoubleClick += NotifyIcon_DoubleClick;
+
+            // Optional: Context menu
+            ContextMenuStrip contextMenu = new ContextMenuStrip();
+            contextMenu.Items.Add("Open", null, (s, e) => RestoreFromTray());
+            contextMenu.Items.Add("Exit", null, (s, e) => Application.Exit());
+            notifyIcon.ContextMenuStrip = contextMenu;
+
+            // Handle minimize
+            this.Resize += Form1_Resize;
+        }
+
+        private void Form1_Resize(object sender, EventArgs e)
+        {
+            if (WindowState == FormWindowState.Minimized)
+            {
+                Hide();
+                notifyIcon.Visible = true;
+            }
+        }
+
+        private void NotifyIcon_DoubleClick(object sender, EventArgs e)
+        {
+            RestoreFromTray();
+        }
+
+        private void RestoreFromTray()
+        {
+            Show();
+            WindowState = FormWindowState.Normal;
+            BringToFront();
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            notifyIcon.Visible = false;
+            notifyIcon.Dispose();
+            base.OnFormClosing(e);
+        }
+
 
         [DllImport("user32.dll")]
         private static extern bool HideCaret(IntPtr hWnd);
