@@ -8,7 +8,7 @@ namespace Simple_Windows_Calculator
         private NotifyIcon notifyIcon;
         private KeyboardHook keyboardHook;
 
-        bool NumLockIsSetToOn = false;
+        bool NumLockIsSetToOn = true;
 
         [DllImport("user32.dll")]
         private static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, int dwExtraInfo);
@@ -44,6 +44,10 @@ namespace Simple_Windows_Calculator
         {
             if (e.Key == Keys.NumLock)
             {
+                if (!NumLockIsSetToOn)
+                {
+                    return;
+                }
                 if (WindowState == FormWindowState.Minimized || !Visible)
                 {
                     RestoreFromTray();
