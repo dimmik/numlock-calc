@@ -57,6 +57,7 @@ namespace Simple_Windows_Calculator
                 if (key == Keys.NumLock)
                 {
                     KeyPressed?.Invoke(this, new KeyPressedEventArgs(key));
+                    //return (IntPtr)1;
                 }
             }
             return CallNextHookEx(_hookID, nCode, wParam, lParam);

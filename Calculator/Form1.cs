@@ -20,11 +20,18 @@ namespace Simple_Windows_Calculator
         [DllImport("user32.dll")]
         private static extern bool SetKeyboardState(byte[] lpKeyState);
 
+        private static void log(string msg) {
+            //File.AppendAllLines(@"c:\tmp\log.txt", [msg]);
+            // intentionally do nothing
+        }
+
         public SimpleCalculator()
         {
+            log("started");
             InitializeComponent();
             SetupTrayIcon();
             SetupKeyboardHook();
+            SetNumLockState(true);
         }
 
         // P/Invoke for NumLock control
@@ -39,6 +46,39 @@ namespace Simple_Windows_Calculator
             keyboardHook.KeyPressed += KeyboardHook_KeyPressed;
             keyboardHook.Hook();
         }
+
+        private void SetNumLockState(bool state)
+        {
+            NumLockIsSetToOn = false;
+            log("set numlock on before");
+            SetNumLockStateInternally(state);
+            log("set numlock on after");
+            // set flag back
+            new Thread((() =>
+            {
+                System.Threading.Thread.Sleep(50);
+                NumLockIsSetToOn = true;
+                log("NumlockSet flag set to true");
+            })).Start();
+        }
+        private void SetNumLockStateInternally(bool state)
+        {
+            bool nlstate = Control.IsKeyLocked(Keys.NumLock);
+            log($"nlstate: {nlstate}");
+            if (nlstate != state)
+            {
+                log("start numlock simulation");
+                // Simulate NumLock keypress
+                keybd_event(VK_NUMLOCK, 0x45, KEYEVENTF_EXTENDEDKEY, 0);
+                keybd_event(VK_NUMLOCK, 0x45, KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP, 0);
+                log("end numlock simulation");
+                nlstate = Control.IsKeyLocked(Keys.NumLock);
+                log($"nlstate NOW: {nlstate}");
+            }
+
+        }
+
+
 
         private void KeyboardHook_KeyPressed(object sender, KeyPressedEventArgs e)
         {
@@ -87,6 +127,7 @@ namespace Simple_Windows_Calculator
         {
             Hide();
             notifyIcon.Visible = true;
+            //SetNumLockState(true);
         }
 
         private void Form1_Resize(object sender, EventArgs e)
@@ -107,6 +148,7 @@ namespace Simple_Windows_Calculator
             Show();
             WindowState = FormWindowState.Normal;
             BringToFront();
+            //SetNumLockState(true);
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
